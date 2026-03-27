@@ -140,6 +140,10 @@ export interface MyTeamSummary {
   squad_size_target: number | null;
   players_bought: number;
   open_slots: number;
+  batter_count: number;
+  bowler_count: number;
+  all_rounder_count: number;
+  fielding_asset_count: number;
   batting_total: number;
   bowling_total: number;
   fielding_total: number;
@@ -168,6 +172,91 @@ export interface SubmitLiveAuctionEventRequest {
   team_id: number | null;
   final_price: number | null;
   notes: string | null;
+}
+
+export interface BidRecommendation {
+  player_id: number;
+  player_name: string;
+  fair_value: number;
+  good_buy_upto: number;
+  overpay_threshold: number;
+  hard_cap: number;
+  recommendation_label: string;
+  recommendation_reason: string;
+  scarcity_score: number;
+  team_need_score: number;
+}
+
+export interface TeamBuilderRosterItem {
+  player_id: number;
+  player_name: string;
+  role_hint: string;
+  roster_status: string;
+  purchase_price: number | null;
+  batting_score: number;
+  bowling_score: number;
+  fielding_score: number;
+  overall_score: number;
+}
+
+export interface TeamBuilderSummary {
+  team_name: string;
+  remaining_budget: number;
+  squad_size_target: number | null;
+  players_bought: number;
+  open_slots: number;
+  batter_count: number;
+  bowler_count: number;
+  all_rounder_count: number;
+  fielding_asset_count: number;
+  batting_total: number;
+  bowling_total: number;
+  fielding_total: number;
+  overall_total: number;
+}
+
+export interface TeamBuilderResponse {
+  summary: TeamBuilderSummary | null;
+  roster: TeamBuilderRosterItem[];
+}
+
+export interface PostAuctionTeamTopPlayer {
+  player_name: string;
+  overall_score: number;
+}
+
+export interface PostAuctionTeamItem {
+  team_id: number;
+  team_name: string;
+  owner_name: string | null;
+  players_count: number;
+  remaining_budget: number;
+  batting_total: number;
+  bowling_total: number;
+  fielding_total: number;
+  overall_total: number;
+  batter_count: number;
+  bowler_count: number;
+  all_rounder_count: number;
+  fielding_asset_count: number;
+  strengths: string[];
+  weaknesses: string[];
+  top_players: PostAuctionTeamTopPlayer[];
+}
+
+export interface BestValueBuyItem {
+  player_name: string;
+  team_name: string;
+  sold_price: number;
+  overall_score: number;
+  value_index: number;
+}
+
+export interface PostAuctionAnalysisResponse {
+  teams: PostAuctionTeamItem[];
+  contender_team_names: string[];
+  average_team_overall: number;
+  best_value_buys: BestValueBuyItem[];
 }
 
 export function getApiBaseUrl() {
@@ -363,4 +452,41 @@ export async function resetLiveAuction(): Promise<{ message: string }> {
   }
 
   return (await response.json()) as { message: string };
+}
+
+export async function fetchBidRecommendation(playerId: number): Promise<BidRecommendation> {
+  const response = await fetch(`${apiBaseUrl}/api/live-auction/recommendation/${playerId}`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(errorBody || "Failed to load bid recommendation.");
+  }
+
+  return (await response.json()) as BidRecommendation;
+}
+
+export async function fetchTeamBuilderData(): Promise<TeamBuilderResponse> {
+  const response = await fetch(`${apiBaseUrl}/api/team-builder`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load team builder data.");
+  }
+
+  return (await response.json()) as TeamBuilderResponse;
+}
+
+export async function fetchPostAuctionAnalysis(): Promise<PostAuctionAnalysisResponse> {
+  const response = await fetch(`${apiBaseUrl}/api/post-auction-analysis`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load post-auction analysis.");
+  }
+
+  return (await response.json()) as PostAuctionAnalysisResponse;
 }

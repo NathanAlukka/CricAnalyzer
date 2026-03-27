@@ -32,6 +32,8 @@ export default async function LiveAuctionPage() {
         <div className="flex gap-3">
           <Link className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" href="/">Back to dashboard</Link>
           <Link className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" href="/auction-setup">Auction setup</Link>
+          <Link className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" href="/team-builder">Team builder</Link>
+          <Link className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100" href="/post-auction-analysis">Post-auction analysis</Link>
         </div>
       </div>
 

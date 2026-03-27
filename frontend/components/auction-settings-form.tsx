@@ -124,7 +124,7 @@ export function AuctionSettingsForm({ initialSettings, playerOptions }: AuctionS
     <section className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
       <h2 className="text-2xl font-semibold text-slate-900">Auction Rules And Teams</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">
-        Set the basic auction rules, then define the teams and captains.
+        Set the basic auction rules, then define the teams and captains. Linked captains are retained on the roster before the auction starts, so they will not appear in the live player pool.
       </p>
 
       <form className="mt-6 space-y-8" onSubmit={handleSubmit}>

@@ -17,7 +17,19 @@ def test_normalize_lower_better_inverts_range() -> None:
 
 
 def test_compute_role_hint_detects_all_rounder() -> None:
-    assert compute_role_hint(7.5, 7.0, 4.0) == PlayerRoleHint.ALL_ROUNDER
+    assert compute_role_hint(3.7, 5.0, 4.0) == PlayerRoleHint.ALL_ROUNDER
+
+
+def test_compute_role_hint_detects_batter_using_new_cutoff() -> None:
+    assert compute_role_hint(3.7, 4.9, 3.0) == PlayerRoleHint.BATTER
+
+
+def test_compute_role_hint_detects_bowler_using_new_cutoff() -> None:
+    assert compute_role_hint(3.6, 5.0, 3.0) == PlayerRoleHint.BOWLER
+
+
+def test_compute_role_hint_detects_fielding_asset_using_new_cutoff() -> None:
+    assert compute_role_hint(3.0, 4.0, 4.0) == PlayerRoleHint.FIELDING_ASSET
 
 
 def test_calculate_scores_for_player_returns_scores_out_of_ten() -> None:

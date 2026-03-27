@@ -56,6 +56,18 @@ export default async function HomePage() {
             >
               Open live auction
             </Link>
+            <Link
+              className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+              href="/team-builder"
+            >
+              Open team builder
+            </Link>
+            <Link
+              className="rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+              href="/post-auction-analysis"
+            >
+              Open post-auction analysis
+            </Link>
           </div>
         </div>
       </section>
@@ -89,6 +101,8 @@ export default async function HomePage() {
           <li>A dedicated player database page</li>
           <li>An auction setup page for rules, teams, captains, and player pool upload</li>
           <li>A live auction page for event logging, budget tracking, and sold/unsold updates</li>
+          <li>A team builder page for roster view, role counts, and composition charts</li>
+          <li>A post-auction analysis page for team comparison, contenders, and value buys</li>
         </ul>
       </section>
     </main>

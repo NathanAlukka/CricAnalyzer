@@ -18,14 +18,27 @@ def score_record_quality(dataset_type: str, row: dict) -> tuple:
     """Rank duplicate rows so the importer keeps the most useful one."""
 
     if dataset_type == "batting":
-        return (row["matches"], row["innings"], row["runs"], row["average"], row["strike_rate"], row["fours"])
+        return (
+            row.get("matches", 0),
+            row.get("innings", 0),
+            row.get("runs", 0),
+            row.get("average", 0),
+            row.get("strike_rate", 0),
+            row.get("fours", 0),
+        )
     if dataset_type == "bowling":
-        return (row["matches"], row["overs"], row["wickets"], row["average"], row["economy"])
+        return (
+            row.get("matches", 0),
+            row.get("overs", 0),
+            row.get("wickets", 0),
+            row.get("average", 0),
+            row.get("economy", 0),
+        )
     return (
-        row["matches"],
-        row["catches"],
-        row["direct_run_outs"],
-        row["indirect_run_outs"],
+        row.get("matches", 0),
+        row.get("catches", 0),
+        row.get("direct_run_outs", 0),
+        row.get("indirect_run_outs", 0),
     )
 
 

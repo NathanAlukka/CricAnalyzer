@@ -5,7 +5,18 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import AuctionEvent, AuctionSetting, Captain, CurrentPlayerPool, Player, PoolStatus, SoldPlayer, Team, TeamRoster
+from app.models import (
+    AuctionEvent,
+    AuctionSetting,
+    Captain,
+    CurrentPlayerPool,
+    Player,
+    PoolStatus,
+    RosterStatus,
+    SoldPlayer,
+    Team,
+    TeamRoster,
+)
 from app.schemas.auction_setup import AuctionSettingsSaveRequest
 from app.services.excel_parser import normalize_player_name, parse_current_player_pool_excel
 
@@ -64,11 +75,12 @@ def save_auction_setup(session: Session, payload: AuctionSettingsSaveRequest) ->
     for setting in existing_settings:
         setting.is_active = False
 
-    session.query(SoldPlayer).delete()
-    session.query(TeamRoster).delete()
-    session.query(AuctionEvent).delete()
-    session.query(Captain).delete()
-    session.query(Team).delete()
+    session.query(SoldPlayer).delete(synchronize_session=False)
+    session.query(TeamRoster).delete(synchronize_session=False)
+    session.query(AuctionEvent).delete(synchronize_session=False)
+    session.query(Captain).delete(synchronize_session=False)
+    session.query(Team).delete(synchronize_session=False)
+    session.flush()
 
     new_setting = AuctionSetting(
         tournament_name=payload.tournament_name,
@@ -103,7 +115,19 @@ def save_auction_setup(session: Session, payload: AuctionSettingsSaveRequest) ->
             self_cost_deduction=Decimal(str(payload.captain_self_value_deduction)),
         )
         session.add(captain)
+        session.flush()
 
+        if team_payload.captain_player_id is not None:
+            session.add(
+                TeamRoster(
+                    team_id=team.id,
+                    player_id=team_payload.captain_player_id,
+                    purchase_price=Decimal(str(payload.captain_self_value_deduction)),
+                    status=RosterStatus.CAPTAIN_RETAINED,
+                )
+            )
+
+    sync_captain_pool_entries(session)
     session.commit()
     return get_auction_setup(session)
 
@@ -117,6 +141,22 @@ def get_or_create_player(session: Session, player_name: str) -> tuple[Player, bo
     session.add(player)
     session.flush()
     return player, True
+
+
+def sync_captain_pool_entries(session: Session) -> None:
+    captain_player_ids = {
+        player_id
+        for player_id in session.scalars(select(Captain.player_id)).all()
+        if player_id is not None
+    }
+
+    pool_entries = session.scalars(select(CurrentPlayerPool)).all()
+    for entry in pool_entries:
+        if entry.player_id in captain_player_ids:
+            entry.status = PoolStatus.WITHDRAWN
+            entry.is_captain = True
+        elif entry.status == PoolStatus.WITHDRAWN:
+            entry.status = PoolStatus.AVAILABLE
 
 
 def upload_current_player_pool(
@@ -169,6 +209,7 @@ def upload_current_player_pool(
         if pool_entry.is_captain:
             captains_marked += 1
 
+    sync_captain_pool_entries(session)
     session.commit()
 
     return {

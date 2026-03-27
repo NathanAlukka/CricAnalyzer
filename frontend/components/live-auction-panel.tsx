@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import type { LiveAuctionStateResponse } from "@/lib/api";
-import { fetchLiveAuctionState, resetLiveAuction, submitLiveAuctionEvent } from "@/lib/api";
+import { RecommendationBox } from "@/components/recommendation-box";
+import type { BidRecommendation, LiveAuctionStateResponse } from "@/lib/api";
+import { fetchBidRecommendation, fetchLiveAuctionState, resetLiveAuction, submitLiveAuctionEvent } from "@/lib/api";
 
 interface LiveAuctionPanelProps {
   initialState: LiveAuctionStateResponse;
@@ -20,11 +21,53 @@ export function LiveAuctionPanel({ initialState }: LiveAuctionPanelProps) {
   const [isResetting, setIsResetting] = useState(false);
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [recommendation, setRecommendation] = useState<BidRecommendation | null>(null);
+  const [recommendationError, setRecommendationError] = useState<string | null>(null);
+  const [isRecommendationLoading, setIsRecommendationLoading] = useState(false);
 
   const selectedPlayer = useMemo(
     () => state.remaining_pool.find((player) => String(player.player_id) === selectedPlayerId) ?? null,
     [selectedPlayerId, state.remaining_pool],
   );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadRecommendation() {
+      if (!selectedPlayerId) {
+        setRecommendation(null);
+        setRecommendationError(null);
+        return;
+      }
+
+      setIsRecommendationLoading(true);
+      setRecommendationError(null);
+
+      try {
+        const nextRecommendation = await fetchBidRecommendation(Number(selectedPlayerId));
+        if (!cancelled) {
+          setRecommendation(nextRecommendation);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setRecommendation(null);
+          setRecommendationError(
+            error instanceof Error ? error.message : "Failed to load recommendation.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRecommendationLoading(false);
+        }
+      }
+    }
+
+    void loadRecommendation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPlayerId]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -187,6 +230,33 @@ export function LiveAuctionPanel({ initialState }: LiveAuctionPanelProps) {
           <p className="text-sm text-slate-600">Open slots</p>
           <p className="mt-2 text-3xl font-bold text-slate-900">{state.my_team_summary?.open_slots ?? 0}</p>
         </div>
+      </section>
+
+      <section className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl border border-slate-200 p-4">
+          <p className="text-sm text-slate-600">Batters</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{state.my_team_summary?.batter_count ?? 0}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 p-4">
+          <p className="text-sm text-slate-600">Bowlers</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{state.my_team_summary?.bowler_count ?? 0}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 p-4">
+          <p className="text-sm text-slate-600">All-rounders</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{state.my_team_summary?.all_rounder_count ?? 0}</p>
+        </div>
+        <div className="rounded-2xl border border-slate-200 p-4">
+          <p className="text-sm text-slate-600">Good fielders</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{state.my_team_summary?.fielding_asset_count ?? 0}</p>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <RecommendationBox
+          recommendation={recommendation}
+          errorMessage={recommendationError}
+          isLoading={isRecommendationLoading}
+        />
       </section>
 
       <section className="mt-8 rounded-2xl border border-slate-200">

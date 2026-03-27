@@ -27,9 +27,9 @@ SCORING_WEIGHTS = {
 }
 
 ROLE_HINT_THRESHOLDS = {
-    "all_rounder_min": 6.0,
-    "fielding_asset_min": 7.0,
-    "specialist_gap": 1.0,
+    "batter_min": 3.7,
+    "bowler_min": 5.0,
+    "fielding_asset_min": 4.0,
 }
 
 MINIMUM_SAMPLE_LIMITS = {
@@ -39,3 +39,16 @@ MINIMUM_SAMPLE_LIMITS = {
 
 SCORING_VERSION = "v1"
 SCORE_SCALE_MAX = 10.0
+
+BID_RECOMMENDATION_CONFIG = {
+    "good_buy_discount": 0.88,
+    "overpay_markup": 1.22,
+    "hard_cap_markup": 1.45,
+    "budget_safety_ratio": 1.0,
+    "score_bonus_multiplier": 2.0,
+    "priority_target_min": 20.0,
+    "good_value_min": 13.0,
+    "skip_max": 6.5,
+    "target_bowlers": 7,
+    "target_batting_ratio": 0.75,
+}

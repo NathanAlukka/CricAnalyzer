@@ -40,6 +40,10 @@ class MyTeamSummary(BaseModel):
     squad_size_target: int | None
     players_bought: int
     open_slots: int
+    batter_count: int
+    bowler_count: int
+    all_rounder_count: int
+    fielding_asset_count: int
     batting_total: float
     bowling_total: float
     fielding_total: float
@@ -67,3 +71,16 @@ class SubmitAuctionEventResponse(BaseModel):
 
 class ResetAuctionResponse(BaseModel):
     message: str
+
+
+class BidRecommendationResponse(BaseModel):
+    player_id: int
+    player_name: str
+    fair_value: float
+    good_buy_upto: float
+    overpay_threshold: float
+    hard_cap: float
+    recommendation_label: str
+    recommendation_reason: str
+    scarcity_score: float
+    team_need_score: float

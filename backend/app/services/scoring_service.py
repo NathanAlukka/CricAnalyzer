@@ -50,19 +50,19 @@ def compute_role_hint(
     bowling_value = bowling_score or 0.0
     fielding_value = fielding_score or 0.0
 
-    if batting_score is not None and bowling_score is not None:
-        if batting_value >= ROLE_HINT_THRESHOLDS["all_rounder_min"] and bowling_value >= ROLE_HINT_THRESHOLDS["all_rounder_min"]:
-            return PlayerRoleHint.ALL_ROUNDER
-    if fielding_score is not None:
-        if fielding_value >= ROLE_HINT_THRESHOLDS["fielding_asset_min"] and fielding_value > batting_value and fielding_value > bowling_value:
-            return PlayerRoleHint.FIELDING_ASSET
-    if batting_score is not None and batting_value >= bowling_value + ROLE_HINT_THRESHOLDS["specialist_gap"]:
-        return PlayerRoleHint.BATTER
-    if bowling_score is not None and bowling_value >= batting_value + ROLE_HINT_THRESHOLDS["specialist_gap"]:
-        return PlayerRoleHint.BOWLER
-    if batting_score is not None or bowling_score is not None:
+    is_batter = batting_score is not None and batting_value >= ROLE_HINT_THRESHOLDS["batter_min"]
+    is_bowler = bowling_score is not None and bowling_value >= ROLE_HINT_THRESHOLDS["bowler_min"]
+    is_fielding_asset = fielding_score is not None and fielding_value >= ROLE_HINT_THRESHOLDS["fielding_asset_min"]
+
+    if is_batter and is_bowler:
         return PlayerRoleHint.ALL_ROUNDER
-    return PlayerRoleHint.FIELDING_ASSET if fielding_score is not None else PlayerRoleHint.UNKNOWN
+    if is_bowler:
+        return PlayerRoleHint.BOWLER
+    if is_batter:
+        return PlayerRoleHint.BATTER
+    if is_fielding_asset:
+        return PlayerRoleHint.FIELDING_ASSET
+    return PlayerRoleHint.UNKNOWN
 
 
 def build_metric_ranges(player_inputs: list[dict]) -> dict[str, tuple[float, float]]:

@@ -5,6 +5,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.scoring_config import ROLE_HINT_THRESHOLDS
 from app.models import (
     AuctionEvent,
     AuctionEventType,
@@ -37,6 +38,17 @@ def build_team_summary(session: Session, team: Team) -> dict:
     bowling_total = sum(float(score.bowling_score) for score in merged_scores)
     fielding_total = sum(float(score.fielding_score) for score in merged_scores)
     overall_total = sum(float(score.overall_score) for score in merged_scores)
+    batter_count = sum(1 for score in merged_scores if float(score.batting_score) >= ROLE_HINT_THRESHOLDS["batter_min"])
+    bowler_count = sum(1 for score in merged_scores if float(score.bowling_score) >= ROLE_HINT_THRESHOLDS["bowler_min"])
+    all_rounder_count = sum(
+        1
+        for score in merged_scores
+        if float(score.batting_score) >= ROLE_HINT_THRESHOLDS["batter_min"]
+        and float(score.bowling_score) >= ROLE_HINT_THRESHOLDS["bowler_min"]
+    )
+    fielding_asset_count = sum(
+        1 for score in merged_scores if float(score.fielding_score) >= ROLE_HINT_THRESHOLDS["fielding_asset_min"]
+    )
 
     return {
         "team_name": team.name,
@@ -44,6 +56,10 @@ def build_team_summary(session: Session, team: Team) -> dict:
         "squad_size_target": team.squad_size_target,
         "players_bought": len(roster_entries),
         "open_slots": max((team.squad_size_target or 0) - len(roster_entries), 0),
+        "batter_count": batter_count,
+        "bowler_count": bowler_count,
+        "all_rounder_count": all_rounder_count,
+        "fielding_asset_count": fielding_asset_count,
         "batting_total": round(batting_total, 2),
         "bowling_total": round(bowling_total, 2),
         "fielding_total": round(fielding_total, 2),
@@ -127,12 +143,17 @@ def get_live_auction_state(session: Session) -> dict:
 
 def reset_live_auction(session: Session) -> dict:
     session.query(SoldPlayer).delete()
-    session.query(TeamRoster).delete()
+    session.query(TeamRoster).filter(TeamRoster.status == RosterStatus.BOUGHT).delete()
     session.query(AuctionEvent).delete()
 
     pool_entries = session.scalars(select(CurrentPlayerPool)).all()
+    captain_player_ids = {
+        player_id
+        for player_id in session.scalars(select(Captain.player_id)).all()
+        if player_id is not None
+    }
     for entry in pool_entries:
-        entry.status = PoolStatus.AVAILABLE
+        entry.status = PoolStatus.WITHDRAWN if entry.player_id in captain_player_ids else PoolStatus.AVAILABLE
 
     teams = session.scalars(select(Team)).all()
     for team in teams:
